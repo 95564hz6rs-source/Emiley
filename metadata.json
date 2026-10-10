@@ -1,0 +1,6 @@
+{
+  "name": "TaskFlow - Modern Smart To-Do List",
+  "description": "A sleek, responsive To-Do List app with cloud sync, real-time Firestore persistence, Google authentication, and fast client-side filters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

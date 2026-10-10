@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidTask(data, userId) {
+      return data.keys().hasAll(['title', 'completed', 'userId', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['title', 'completed', 'userId', 'createdAt', 'updatedAt', 'category', 'priority'])
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 300
+        && data.completed is bool
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && (!('category' in data) || (data.category is string && data.category.size() <= 50))
+        && (!('priority' in data) || (data.priority in ['low', 'medium', 'high']));
+    }
+
+    match /users/{userId}/tasks/{taskId} {
+      allow get: if isOwner(userId) && isValidId(taskId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId)
+        && isValidId(taskId)
+        && isValidTask(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isOwner(userId)
+        && isValidId(taskId)
+        && isValidTask(incoming(), userId)
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'completed', 'category', 'priority', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(taskId);
+    }
+  }
+}

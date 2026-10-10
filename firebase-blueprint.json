@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A to-do task item owned by a user",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The description or title of the task",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task has been marked completed"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the owner user",
+          "maxLength": 128
+        },
+        "category": {
+          "type": "string",
+          "description": "Category or tag for organization",
+          "maxLength": 50
+        },
+        "priority": {
+          "type": "string",
+          "description": "Priority level of the task",
+          "enum": ["low", "medium", "high"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when task was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when task was last updated"
+        }
+      },
+      "required": ["title", "completed", "userId", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "User specific task items collection"
+    }
+  }
+}
